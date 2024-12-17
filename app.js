@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const database = getDatabase(app);
 
-let rankings = { films: [], series: [] };
+let rankings = { films: [], series: [], worstFilms: [], worstSeries: [] };
 
 // Wacht op Firebase-authenticatie bij het laden van de pagina
 window.onload = () => {
@@ -60,10 +60,11 @@ function handleAuth(type) {
 function loadUserData() {
     onAuthStateChanged(auth, user => {
         if (user) {
-            ["films", "series"].forEach(type => {
+            ["films", "series", "worstFilms", "worstSeries"].forEach(type => {
                 get(child(ref(database), `${user.uid}/${type}`)).then(snapshot => {
                     if (snapshot.exists()) rankings[type] = snapshot.val();
-                    renderList(type);
+                    if (type === "films" || type === "series") renderList(type);
+                    else renderWorstList(type);
                 });
             });
         }
@@ -73,6 +74,8 @@ function loadUserData() {
 // Titel Toevoegen
 document.getElementById("addFilmBtn").onclick = () => processRanking("films", document.getElementById("filmInput").value);
 document.getElementById("addSeriesBtn").onclick = () => processRanking("series", document.getElementById("seriesInput").value);
+document.getElementById("addWorstFilmBtn").onclick = () => processWorstRanking("worstFilms", document.getElementById("worstFilmInput").value);
+document.getElementById("addWorstSeriesBtn").onclick = () => processWorstRanking("worstSeries", document.getElementById("worstSeriesInput").value);
 
 function processRanking(type, title) {
     if (!title) return alert("Voer een titel in!");
@@ -98,9 +101,52 @@ function processRanking(type, title) {
     saveToFirebase(type);
 }
 
+function processWorstRanking(type, title) {
+    if (!title) return alert("Voer een titel in!");
+
+    let inserted = false;
+    for (let i = 0; i < 5; i++) {
+        if (!rankings[type][i]) {
+            rankings[type].splice(i, 0, title);
+            inserted = true;
+            break;
+        }
+        const isWorse = confirm(`Is "${title}" slechter dan "${rankings[type][i]}"?`);
+        if (isWorse) {
+            rankings[type].splice(i, 0, title);
+            inserted = true;
+            break;
+        }
+    }
+
+    if (rankings[type].length > 5) rankings[type].pop();
+    if (!inserted) alert(`${title} staat niet in de slechtste 5.`);
+    renderWorstList(type);
+    saveToFirebase(type);
+}
+
 // Render Lijst
 function renderList(type) {
     const listElement = document.getElementById(type === "films" ? "filmList" : "seriesList");
+    listElement.innerHTML = "";
+
+    rankings[type].forEach((item, index) => {
+        listElement.innerHTML += `
+            <li>
+                <span id="${type}-title-${index}">${index + 1}. ${item}</span>
+                <button id="edit-btn-${type}-${index}" onclick="editTitle('${type}', ${index})">✏️</button>
+                <div id="actions-${type}-${index}" style="display: none;">
+                    <button onclick="moveUp('${type}', ${index})">🔼</button>
+                    <button onclick="moveDown('${type}', ${index})">🔽</button>
+                    <button onclick="deleteTitle('${type}', ${index})">❌</button>
+                </div>
+            </li>
+        `;
+    });
+}
+
+function renderWorstList(type) {
+    const listElement = document.getElementById(type === "worstFilms" ? "worstFilmList" : "worstSeriesList");
     listElement.innerHTML = "";
 
     rankings[type].forEach((item, index) => {
@@ -139,7 +185,8 @@ window.saveEdit = function(type, index) {
     const editBtn = document.getElementById(`edit-btn-${type}-${index}`);
     if (newTitle) {
         rankings[type][index] = newTitle;
-        renderList(type);
+        if (type === "films" || type === "series") renderList(type);
+        else renderWorstList(type);
         saveToFirebase(type);
     } else {
         alert("Titel mag niet leeg zijn!");
@@ -152,21 +199,25 @@ window.saveEdit = function(type, index) {
 window.moveUp = function(type, index) {
     if (index > 0) {
         [rankings[type][index - 1], rankings[type][index]] = [rankings[type][index], rankings[type][index - 1]];
-        renderList(type);
+        if (type === "films" || type === "series") renderList(type);
+        else renderWorstList(type);
     }
 };
 
 window.moveDown = function(type, index) {
     if (index < rankings[type].length - 1) {
         [rankings[type][index + 1], rankings[type][index]] = [rankings[type][index], rankings[type][index + 1]];
-        renderList(type);
+        if (type === "films" || type === "series") renderList(type);
+        else renderWorstList(type);
     }
 };
 
 window.deleteTitle = function(type, index) {
     if (confirm("Weet je zeker dat je deze titel wilt verwijderen?")) {
         rankings[type].splice(index, 1);
-        renderList(type);
+        if (type === "films" || type === "series") renderList(type);
+        else renderWorstList(type);
+        saveToFirebase(type);
     }
 };
 
