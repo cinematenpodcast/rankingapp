@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 5 Films & Series</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login Popup -->
+    <div id="loginPopup" class="popup">
+        <div class="popup-content">
+            <h1>Login of Registreer</h1>
+            <input type="email" id="emailInput" placeholder="Email" onkeypress="checkEnter(event)">
+            <input type="password" id="passwordInput" placeholder="Password" onkeypress="checkEnter(event)">
+            <button id="registerBtn">Registreren</button>
+            <button id="loginBtn">Inloggen</button>
+        </div>
+    </div>
+
+    <!-- Films Sectie -->
+    <div class="container">
+        <h1>Top 5 Films</h1>
+        <input type="text" id="filmInput" placeholder="Voer een filmtitel in">
+        <button id="addFilmBtn">Toevoegen</button>
+        <ol id="filmList"></ol>
+    </div>
+
+    <!-- Series Sectie -->
+    <div class="container">
+        <h1>Top 5 Series</h1>
+        <input type="text" id="seriesInput" placeholder="Voer een serietitel in">
+        <button id="addSeriesBtn">Toevoegen</button>
+        <ol id="seriesList"></ol>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
