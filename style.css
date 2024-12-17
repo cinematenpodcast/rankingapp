@@ -104,3 +104,11 @@ li input {
     margin: 10px 0;
     width: 100%;
 }
+
+h1 {
+    margin-bottom: 10px;
+}
+
+button:hover {
+    background-color: #c0392b; /* Alternatieve hoverkleur voor extra contrast */
+}
