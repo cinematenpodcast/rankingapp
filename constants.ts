@@ -3,7 +3,7 @@ import { RankItem } from './types';
 // Replace these with your actual keys to fetch posters
 // NOTE: For a real production app, these should be in environment variables or a backend proxy.
 export const OMDB_API_KEY = '4d18987b'; 
-export const TMDB_API_TOKEN = ''; // User needs to add their Bearer Token here in code or Env
+export const TMDB_API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjYTRjYWE3ZDQ2NjFlMTFkMzQ1NjFmZjUwZjkxZDBlZSIsIm5iZiI6MTczMTU3MDc2OS41NCwic3ViIjoiNjczNWFjNTFlMDU4MjNiZDljN2M0MDU2Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.TuUIOb_OqUxDNbbwmmH74eu5ZIzLPWSuzSC4Ujy9YFI'; // User needs to add their Bearer Token here in code or Env
 
 export const INITIAL_MOVIES: string[] = [
   "Nosferatu", "Emilia Pérez", "Se7en", "Wolf Man", "Better Man",

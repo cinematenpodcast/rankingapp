@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://api.themoviedb.org/3/find/FILMTITEL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "external_source",
+              "value": "imdb_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1312,
+        -432
+      ],
+      "id": "a9dcfe15-5dc3-4a19-bb85-efea8a556253",
+      "name": "Get Poster Link1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "yzYdBAfxXWQBdqkK",
+          "name": "TMDB TOKEN"
+        }
+      }
+    }
+  ]
+}
+

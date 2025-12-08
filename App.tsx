@@ -251,6 +251,11 @@ function App() {
             <h1 className="text-2xl font-bold tracking-tight">Cinematen Ranker</h1>
           </div>
 
+          {/* Stats */}
+          <div className="text-white/90 font-bold text-lg tracking-wider">
+            {currentRanked.length}/{currentUnranked.length}
+          </div>
+
           {/* Category Switcher */}
           <div className="flex bg-black/20 p-1 rounded-lg backdrop-blur-sm">
             <button
@@ -325,12 +330,6 @@ function App() {
                </div>
              ) : (
                <>
-                 <div className="text-center mb-2 md:mb-6">
-                   <p className="text-xs md:text-sm text-gray-400 uppercase tracking-widest">
-                     Ranking <span className="font-bold text-gray-700">{currentRanked.length} ranked</span> / {currentUnranked.length} remaining
-                   </p>
-                 </div>
-                 
                  {comparisonItem && (
                    <RankingInterface 
                       category={category}
