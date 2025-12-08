@@ -26,13 +26,20 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
       <div className="flex flex-row items-center justify-center gap-3 md:gap-12 w-full mb-4">
         
         {/* NEW ITEM CARD */}
-        <div className="flex-1 max-w-[45%] md:max-w-[280px] bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg border-2 border-yellow-400 overflow-hidden relative flex flex-col">
+        <div 
+            onClick={() => onDecision(true)}
+            className="flex-1 max-w-[45%] md:max-w-[280px] bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg border-2 border-yellow-400 overflow-hidden relative flex flex-col cursor-pointer transition-transform hover:scale-105 active:scale-95 group"
+        >
           <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-sm rounded-bl-lg z-10">
             NEW
           </div>
           {/* Image Container - Enforce Aspect Ratio 2/3 */}
           <div className="w-full aspect-[2/3] bg-gray-100 relative">
              <PosterImage item={comparison.currentItem} category={category} className="absolute inset-0 w-full h-full" />
+             {/* Hover Overlay */}
+             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <ThumbsUp className="text-white opacity-0 group-hover:opacity-100 transform scale-0 group-hover:scale-110 transition-all duration-300 drop-shadow-lg w-12 h-12" />
+             </div>
           </div>
           {/* Title Container - Increased height and font size */}
           <div className="h-16 md:h-24 p-2 text-center bg-gray-50 flex items-center justify-center border-t border-gray-100 shrink-0">
@@ -48,13 +55,22 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
         </div>
 
         {/* COMPARISON ITEM CARD */}
-        <div className="flex-1 max-w-[45%] md:max-w-[280px] bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg border border-gray-200 overflow-hidden relative flex flex-col">
+        <div 
+            onClick={() => onDecision(false)}
+            className="flex-1 max-w-[45%] md:max-w-[280px] bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg border border-gray-200 overflow-hidden relative flex flex-col cursor-pointer transition-transform hover:scale-105 active:scale-95 group"
+        >
            <div className="absolute top-0 right-0 bg-gray-200 text-gray-600 font-bold px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-sm rounded-bl-lg z-10 md:hidden">
             #{comparison.compareIndex + 1}
           </div>
           {/* Image Container - Enforce Aspect Ratio 2/3 */}
           <div className="w-full aspect-[2/3] bg-gray-100 relative">
              <PosterImage item={comparisonItem} category={category} className="absolute inset-0 w-full h-full opacity-90" />
+             {/* Hover Overlay */}
+             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                 {/* Using ThumbsUp here too because clicking this means "I prefer this one" / "This one is better" in the context of selection, 
+                     even though logically it means 'NO' to "Is New better than Old?" */}
+                <ThumbsUp className="text-white opacity-0 group-hover:opacity-100 transform scale-0 group-hover:scale-110 transition-all duration-300 drop-shadow-lg w-12 h-12" />
+             </div>
           </div>
           {/* Title Container - Increased height and font size */}
           <div className="h-16 md:h-24 p-2 text-center bg-gray-50 flex items-center justify-center border-t border-gray-100 shrink-0">
