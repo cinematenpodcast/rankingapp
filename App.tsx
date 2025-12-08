@@ -5,7 +5,7 @@ import { RankingInterface } from './components/RankingInterface';
 import { RankList } from './components/RankList';
 import { StatsView } from './components/StatsView';
 import { saveRankingData, loadRankingData } from './services/firebase';
-import { Film, Tv, List, Trophy, ChevronDown, Award, AlertCircle } from 'lucide-react';
+import { Film, Tv, List, Trophy, ChevronDown, Award, AlertCircle, Plus } from 'lucide-react';
 
 type ViewMode = 'RANK' | 'LIST' | 'TOP5' | 'BOTTOM5';
 
@@ -21,6 +21,7 @@ function App() {
   const [category, setCategory] = useState<Category>('FILM');
   const [view, setView] = useState<ViewMode>('RANK');
   const [loading, setLoading] = useState(true);
+  const [quickAddTitle, setQuickAddTitle] = useState("");
 
   // Ranking Logic State
   const [comparison, setComparison] = useState<ComparisonState>({
@@ -238,8 +239,16 @@ function App() {
       persistData('SERIES', seriesRanked, newUnranked);
     }
     
-    // Optionally alert user or just update count
+    // optionally alert user or just update count
     // alert(`"${title}" added to unranked list!`);
+  };
+
+  const handleQuickAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (quickAddTitle.trim()) {
+      handleAdd(quickAddTitle.trim());
+      setQuickAddTitle("");
+    }
   };
 
   const switchCategory = (newCat: Category) => {
@@ -360,10 +369,31 @@ function App() {
                    <Award size={40} />
                  </div>
                  <h2 className="text-3xl font-bold text-gray-800 mb-2">All Caught Up!</h2>
-                 <p className="text-gray-500 max-w-md mx-auto">
+                 <p className="text-gray-500 max-w-md mx-auto mb-8">
                    You have ranked all {currentRanked.length} {category === 'FILM' ? 'movies' : 'series'}. 
                    Check out your list or add more titles to your config.
                  </p>
+
+                 <div className="max-w-md mx-auto mb-10">
+                    <form onSubmit={handleQuickAdd} className="flex gap-2 relative z-10">
+                        <input 
+                            type="text" 
+                            value={quickAddTitle}
+                            onChange={(e) => setQuickAddTitle(e.target.value)}
+                            placeholder={`Add another ${category === 'FILM' ? 'movie' : 'series'}...`}
+                            className="flex-grow p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 shadow-sm"
+                            style={{ '--tw-ring-color': category === 'FILM' ? '#E50914' : '#00A8E1' } as React.CSSProperties}
+                        />
+                        <button 
+                            type="submit"
+                            disabled={!quickAddTitle.trim()}
+                            className={`px-4 py-3 rounded-lg text-white font-bold shadow-md transition-colors disabled:opacity-50 flex items-center gap-2 ${category === 'FILM' ? 'bg-movie-600 hover:bg-movie-700' : 'bg-tv-600 hover:bg-tv-700'}`}
+                        >
+                            <Plus size={20} /> Rank It
+                        </button>
+                    </form>
+                 </div>
+
                  <button 
                    onClick={() => setView('LIST')}
                    className={`mt-8 px-6 py-3 rounded-lg font-bold text-white shadow-lg transition-transform hover:scale-105 ${category === 'FILM' ? 'bg-movie-600 hover:bg-movie-700' : 'bg-tv-600 hover:bg-tv-700'}`}

@@ -8,7 +8,7 @@ interface PosterImageProps {
   category: 'FILM' | 'SERIES';
 }
 
-const PLACEHOLDER_URL = "https://www.mockofun.com/wp-content/uploads/2019/10/movie-poster-credits-178.jpg";
+const PLACEHOLDER_URL = "/images/placeholder.jpeg";
 
 export const PosterImage: React.FC<PosterImageProps> = ({ item, className, category }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(item.posterUrl || null);

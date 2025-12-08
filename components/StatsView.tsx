@@ -21,7 +21,8 @@ export const StatsView: React.FC<StatsViewProps> = ({ rankedMovies, rankedSeries
     } else {
       // Last 5 items, we want to show them effectively as the "bottom"
       // If we have 10 items, we want 6, 7, 8, 9, 10.
-      return list.slice(-5);
+      // But user wants them REVERSED (last one on top)
+      return list.slice(-5).reverse();
     }
   };
 
@@ -40,10 +41,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ rankedMovies, rankedSeries
         {items.map((item, idx) => {
           // Calculate actual rank. 
           // If TOP: rank is idx + 1.
-          // If BOTTOM: rank is (total_length - items_length) + idx + 1
+          // If BOTTOM: we reversed the list, so the first item shown is actually the very last rank.
           const realRank = mode === 'TOP' 
             ? idx + 1 
-            : (fullListLength - items.length) + idx + 1;
+            : fullListLength - idx;
 
           return (
             <div key={item.id} className="flex items-center gap-3 bg-white p-2 rounded shadow-sm border border-gray-100">
