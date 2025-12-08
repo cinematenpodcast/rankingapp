@@ -1,0 +1,5 @@
+{
+  "name": "RankMyWatch",
+  "description": "A binary-sort ranking application for Movies and TV Series with OMDB/TMDB integration.",
+  "requestFramePermissions": []
+}

@@ -1,55 +1,50 @@
 <!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top 5 Films & Series</title>
-    <link rel="stylesheet" href="style.css">
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cinematen Ranker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              movie: {
+                50: '#f0f5fc',
+                100: '#e1eaFA',
+                500: '#3e75cc',
+                600: '#1c59b4',
+                700: '#154388',
+              },
+              tv: {
+                50: '#fbf6f9',
+                100: '#f5e6ee',
+                500: '#9d587c',
+                600: '#7d395c',
+                700: '#5e2b45',
+              }
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
 </head>
-<body>
-    <!-- Login Popup -->
-    <div id="loginPopup" class="popup">
-        <div class="popup-content">
-            <h1>Login of Registreer</h1>
-            <input type="email" id="emailInput" placeholder="Email" onkeypress="checkEnter(event)">
-            <input type="password" id="passwordInput" placeholder="Password" onkeypress="checkEnter(event)">
-            <button id="registerBtn">Registreren</button>
-            <button id="loginBtn">Inloggen</button>
-        </div>
-    </div>
-
-    <!-- Films Sectie -->
-    <div class="container">
-        <h1>Top 5 Films</h1>
-        <input type="text" id="filmInput" placeholder="Voer een filmtitel in">
-        <button id="addFilmBtn">Toevoegen</button>
-        <ol id="filmList"></ol>
-    </div>
-
-    <!-- Series Sectie -->
-    <div class="container">
-        <h1>Top 5 Series</h1>
-        <input type="text" id="seriesInput" placeholder="Voer een serietitel in">
-        <button id="addSeriesBtn">Toevoegen</button>
-        <ol id="seriesList"></ol>
-    </div>
-
-    <!-- Slechtste Films Sectie -->
-    <div class="container">
-        <h1>Slechtste 5 Films</h1>
-        <input type="text" id="worstFilmInput" placeholder="Voer een filmtitel in">
-        <button id="addWorstFilmBtn">Toevoegen</button>
-        <ol id="worstFilmList"></ol>
-    </div>
-
-    <!-- Slechtste Series Sectie -->
-    <div class="container">
-        <h1>Slechtste 5 Series</h1>
-        <input type="text" id="worstSeriesInput" placeholder="Voer een serietitel in">
-        <button id="addWorstSeriesBtn">Toevoegen</button>
-        <ol id="worstSeriesList"></ol>
-    </div>
-
-    <script type="module" src="app.js"></script>
-</body>
+  <body class="bg-gray-50 text-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
