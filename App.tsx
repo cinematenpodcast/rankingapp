@@ -209,6 +209,39 @@ function App() {
     }
   };
 
+  const handleDelete = (id: string) => {
+    if (category === 'FILM') {
+      const newRanked = movieRanked.filter(item => item.id !== id);
+      setMovieRanked(newRanked);
+      persistData('FILM', newRanked, movieUnranked);
+    } else {
+      const newRanked = seriesRanked.filter(item => item.id !== id);
+      setSeriesRanked(newRanked);
+      persistData('SERIES', newRanked, seriesUnranked);
+    }
+  };
+
+  const handleAdd = (title: string) => {
+    const newItem: RankItem = {
+      id: `${category}-${Date.now()}`,
+      title: title,
+      category: category
+    };
+
+    if (category === 'FILM') {
+      const newUnranked = [...movieUnranked, newItem];
+      setMovieUnranked(newUnranked);
+      persistData('FILM', movieRanked, newUnranked);
+    } else {
+      const newUnranked = [...seriesUnranked, newItem];
+      setSeriesUnranked(newUnranked);
+      persistData('SERIES', seriesRanked, newUnranked);
+    }
+    
+    // Optionally alert user or just update count
+    // alert(`"${title}" added to unranked list!`);
+  };
+
   const switchCategory = (newCat: Category) => {
     setCategory(newCat);
     // Reset comparison when switching categories to avoid state mismatch
@@ -357,7 +390,13 @@ function App() {
         )}
 
         {view === 'LIST' && (
-          <RankList items={currentRanked} category={category} onReorder={handleReorder} />
+          <RankList 
+            items={currentRanked} 
+            category={category} 
+            onReorder={handleReorder} 
+            onDelete={handleDelete}
+            onAdd={handleAdd}
+          />
         )}
 
         {view === 'TOP5' && (
