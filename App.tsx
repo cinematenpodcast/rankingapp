@@ -199,6 +199,16 @@ function App() {
 
   // --- UI Helpers ---
 
+  const handleReorder = (newItems: RankItem[]) => {
+    if (category === 'FILM') {
+      setMovieRanked(newItems);
+      persistData('FILM', newItems, movieUnranked);
+    } else {
+      setSeriesRanked(newItems);
+      persistData('SERIES', newItems, seriesUnranked);
+    }
+  };
+
   const switchCategory = (newCat: Category) => {
     setCategory(newCat);
     // Reset comparison when switching categories to avoid state mismatch
@@ -347,7 +357,7 @@ function App() {
         )}
 
         {view === 'LIST' && (
-          <RankList items={currentRanked} category={category} />
+          <RankList items={currentRanked} category={category} onReorder={handleReorder} />
         )}
 
         {view === 'TOP5' && (
