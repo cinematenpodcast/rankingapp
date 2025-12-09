@@ -18,15 +18,16 @@ export const PosterImage: React.FC<PosterImageProps> = ({ item, className, categ
   useEffect(() => {
     mountedRef.current = true;
     
-    // If we already have a URL (from props or previous fetch), don't fetch again unless title changes
-    // But since we are not persisting to item in parent yet, we rely on cache in service or local state.
-    // If item.posterUrl is present, use it.
+    // If we already have a URL (from props), use it and do NOT fetch.
     if (item.posterUrl) {
         setImageUrl(item.posterUrl);
         return;
     }
 
     const loadPoster = async () => {
+        // Double check inside the async function in case it changed rapidly
+        if (item.posterUrl) return;
+
         const url = await fetchPosterUrl(item.title, category);
         if (mountedRef.current && url) {
             setImageUrl(url);
@@ -41,7 +42,9 @@ export const PosterImage: React.FC<PosterImageProps> = ({ item, className, categ
     return () => {
         mountedRef.current = false;
     };
-  }, [item.title, category, item.posterUrl, onPosterLoaded, item]);
+    // Removed 'item' from dependency array to prevent loop if reference changes but content is same.
+    // We rely on item.title, item.posterUrl, category.
+  }, [item.title, category, item.posterUrl, onPosterLoaded]);
 
   return (
     <img 
