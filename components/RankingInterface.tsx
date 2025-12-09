@@ -8,13 +8,15 @@ interface RankingInterfaceProps {
   comparison: ComparisonState;
   comparisonItem: RankItem | null;
   onDecision: (better: boolean) => void;
+  onPosterLoaded?: (item: RankItem, url: string) => void;
 }
 
 export const RankingInterface: React.FC<RankingInterfaceProps> = ({ 
   category, 
   comparison, 
   comparisonItem, 
-  onDecision 
+  onDecision,
+  onPosterLoaded
 }) => {
   const [selection, setSelection] = useState<'better' | 'worse' | null>(null);
 
@@ -53,7 +55,7 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
           </div>
           {/* Image Container - Enforce Aspect Ratio 2/3 */}
           <div className="w-full aspect-[2/3] bg-gray-100 relative">
-             <PosterImage item={comparison.currentItem} category={category} className="absolute inset-0 w-full h-full" />
+             <PosterImage item={comparison.currentItem} category={category} className="absolute inset-0 w-full h-full" onPosterLoaded={onPosterLoaded} />
              
              {/* Hover Overlay */}
              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -92,7 +94,7 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
           </div>
           {/* Image Container - Enforce Aspect Ratio 2/3 */}
           <div className="w-full aspect-[2/3] bg-gray-100 relative">
-             <PosterImage item={comparisonItem} category={category} className="absolute inset-0 w-full h-full opacity-90" />
+             <PosterImage item={comparisonItem} category={category} className="absolute inset-0 w-full h-full opacity-90" onPosterLoaded={onPosterLoaded} />
              
              {/* Hover Overlay */}
              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">

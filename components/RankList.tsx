@@ -9,9 +9,10 @@ interface RankListProps {
   onReorder?: (items: RankItem[]) => void;
   onDelete?: (id: string) => void;
   onAdd?: (title: string) => void;
+  onPosterLoaded?: (item: RankItem, url: string) => void;
 }
 
-export const RankList: React.FC<RankListProps> = ({ items, category, onReorder, onDelete, onAdd }) => {
+export const RankList: React.FC<RankListProps> = ({ items, category, onReorder, onDelete, onAdd, onPosterLoaded }) => {
   const isMovie = category === 'FILM';
   const accentColor = isMovie ? 'text-movie-600' : 'text-tv-600';
   const numColor = isMovie ? 'bg-movie-100 text-movie-700' : 'bg-tv-100 text-tv-700';
@@ -130,7 +131,7 @@ export const RankList: React.FC<RankListProps> = ({ items, category, onReorder, 
             {index + 1}
           </div>
           <div className="w-12 h-16 flex-shrink-0 rounded overflow-hidden mr-4 bg-gray-200 select-none pointer-events-none">
-             <PosterImage item={item} category={category} className="w-full h-full" />
+             <PosterImage item={item} category={category} className="w-full h-full" onPosterLoaded={onPosterLoaded} />
           </div>
           <div className="flex-grow select-none">
             <h3 className="font-semibold text-lg text-gray-800">{item.title}</h3>

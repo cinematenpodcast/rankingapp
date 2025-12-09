@@ -6,9 +6,10 @@ interface StatsViewProps {
   rankedMovies: RankItem[];
   rankedSeries: RankItem[];
   mode: 'TOP' | 'BOTTOM';
+  onPosterLoaded?: (item: RankItem, url: string) => void;
 }
 
-export const StatsView: React.FC<StatsViewProps> = ({ rankedMovies, rankedSeries, mode }) => {
+export const StatsView: React.FC<StatsViewProps> = ({ rankedMovies, rankedSeries, mode, onPosterLoaded }) => {
   
   const getItems = (list: RankItem[]) => {
     if (list.length === 0) return [];
@@ -52,7 +53,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ rankedMovies, rankedSeries
                  #{realRank}
                </div>
                <div className="w-10 h-14 shrink-0 bg-gray-200 rounded overflow-hidden">
-                 <PosterImage item={item} category={category} className="w-full h-full" />
+                 <PosterImage item={item} category={category} className="w-full h-full" onPosterLoaded={onPosterLoaded} />
                </div>
                <div className="text-sm font-semibold text-gray-800 line-clamp-2 leading-tight">
                  {item.title}

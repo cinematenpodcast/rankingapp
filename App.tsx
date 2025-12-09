@@ -251,6 +251,55 @@ function App() {
     }
   };
 
+  const handlePosterLoaded = useCallback((item: RankItem, url: string) => {
+      // Find and update item in respective list.
+      // We check where the item is. It could be in ranked or unranked.
+      // We assume item.category is correct.
+      
+      const updateList = (list: RankItem[]) => {
+          const idx = list.findIndex(i => i.id === item.id);
+          if (idx === -1) return null;
+          if (list[idx].posterUrl === url) return null;
+          
+          const newList = [...list];
+          newList[idx] = { ...newList[idx], posterUrl: url };
+          return newList;
+      };
+
+      if (item.category === 'FILM') {
+          // Try ranked
+          let newRanked = updateList(movieRanked);
+          if (newRanked) {
+             setMovieRanked(newRanked);
+             persistData('FILM', newRanked, movieUnranked);
+             return;
+          }
+          // Try unranked
+          let newUnranked = updateList(movieUnranked);
+          if (newUnranked) {
+              setMovieUnranked(newUnranked);
+              persistData('FILM', movieRanked, newUnranked);
+              return;
+          }
+      } else {
+          // Try ranked
+          let newRanked = updateList(seriesRanked);
+          if (newRanked) {
+             setSeriesRanked(newRanked);
+             persistData('SERIES', newRanked, seriesUnranked);
+             return;
+          }
+          // Try unranked
+          let newUnranked = updateList(seriesUnranked);
+          if (newUnranked) {
+              setSeriesUnranked(newUnranked);
+              persistData('SERIES', seriesRanked, newUnranked);
+              return;
+          }
+      }
+
+  }, [movieRanked, movieUnranked, seriesRanked, seriesUnranked]);
+
   const switchCategory = (newCat: Category) => {
     setCategory(newCat);
     // Reset comparison when switching categories to avoid state mismatch
@@ -409,6 +458,7 @@ function App() {
                       comparison={comparison}
                       comparisonItem={comparisonItem}
                       onDecision={handleDecision}
+                      onPosterLoaded={handlePosterLoaded}
                    />
                  )}
                  {!comparisonItem && currentRanked.length > 0 && (
@@ -426,15 +476,16 @@ function App() {
             onReorder={handleReorder} 
             onDelete={handleDelete}
             onAdd={handleAdd}
+            onPosterLoaded={handlePosterLoaded}
           />
         )}
 
         {view === 'TOP5' && (
-          <StatsView rankedMovies={movieRanked} rankedSeries={seriesRanked} mode="TOP" />
+          <StatsView rankedMovies={movieRanked} rankedSeries={seriesRanked} mode="TOP" onPosterLoaded={handlePosterLoaded} />
         )}
 
         {view === 'BOTTOM5' && (
-          <StatsView rankedMovies={movieRanked} rankedSeries={seriesRanked} mode="BOTTOM" />
+          <StatsView rankedMovies={movieRanked} rankedSeries={seriesRanked} mode="BOTTOM" onPosterLoaded={handlePosterLoaded} />
         )}
 
       </main>

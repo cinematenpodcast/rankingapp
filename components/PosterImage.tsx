@@ -6,11 +6,12 @@ interface PosterImageProps {
   item: RankItem;
   className?: string;
   category: 'FILM' | 'SERIES';
+  onPosterLoaded?: (item: RankItem, url: string) => void;
 }
 
 const PLACEHOLDER_URL = "/images/placeholder.jpeg";
 
-export const PosterImage: React.FC<PosterImageProps> = ({ item, className, category }) => {
+export const PosterImage: React.FC<PosterImageProps> = ({ item, className, category, onPosterLoaded }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(item.posterUrl || null);
   const mountedRef = useRef(true);
 
@@ -29,6 +30,9 @@ export const PosterImage: React.FC<PosterImageProps> = ({ item, className, categ
         const url = await fetchPosterUrl(item.title, category);
         if (mountedRef.current && url) {
             setImageUrl(url);
+            if (onPosterLoaded) {
+                onPosterLoaded(item, url);
+            }
         }
     };
 
@@ -37,7 +41,7 @@ export const PosterImage: React.FC<PosterImageProps> = ({ item, className, categ
     return () => {
         mountedRef.current = false;
     };
-  }, [item.title, category, item.posterUrl]);
+  }, [item.title, category, item.posterUrl, onPosterLoaded, item]);
 
   return (
     <img 
