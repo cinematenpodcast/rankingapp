@@ -5,11 +5,16 @@ import { RankingInterface } from './components/RankingInterface';
 import { RankList } from './components/RankList';
 import { StatsView } from './components/StatsView';
 import { saveRankingData, loadRankingData } from './services/firebase';
-import { Film, Tv, List, Trophy, ChevronDown, Award, AlertCircle, Plus } from 'lucide-react';
+import { Film, Tv, List, Trophy, ChevronDown, Award, AlertCircle, Plus, Settings, Calendar } from 'lucide-react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Login } from './components/Login';
+import { UserSettings } from './components/UserSettings';
 
 type ViewMode = 'RANK' | 'LIST' | 'TOP5' | 'BOTTOM5';
 
-function App() {
+function AppContent() {
+  const { user, loading: authLoading } = useAuth();
+
   // State for Lists
   const [movieRanked, setMovieRanked] = useState<RankItem[]>([]);
   const [movieUnranked, setMovieUnranked] = useState<RankItem[]>([]);
@@ -20,8 +25,10 @@ function App() {
   // Navigation State
   const [category, setCategory] = useState<Category>('FILM');
   const [view, setView] = useState<ViewMode>('RANK');
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [quickAddTitle, setQuickAddTitle] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
 
   // Ranking Logic State
   const [comparison, setComparison] = useState<ComparisonState>({
@@ -34,36 +41,76 @@ function App() {
 
   // --- Initialization ---
 
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    setDataLoading(true);
+
+    // Load Movies
+    const savedMovies = await loadRankingData(user.uid, selectedYear, 'FILM');
+    if (savedMovies) {
+      setMovieRanked(savedMovies.ranked);
+      setMovieUnranked(savedMovies.unranked);
+    } else {
+      // For 2026, we start with an EMPTY list, as titles will be added manually or via automation.
+      // We only hydrate default data for other years (like 2025 during migration) if needed,
+      // but here we just clear the state for a fresh start if no data exists.
+      setMovieRanked([]);
+      setMovieUnranked([]);
+    }
+
+    // Load Series
+    const savedSeries = await loadRankingData(user.uid, selectedYear, 'SERIES');
+    if (savedSeries) {
+      setSeriesRanked(savedSeries.ranked);
+      setSeriesUnranked(savedSeries.unranked);
+    } else {
+      // Same for Series: start empty if no data found
+      setSeriesRanked([]);
+      setSeriesUnranked([]);
+    }
+    
+    setDataLoading(false);
+  }, [user, selectedYear]);
+
   useEffect(() => {
-    const initData = async () => {
-      // Load Movies
-      const savedMovies = await loadRankingData('FILM');
-      if (savedMovies) {
-        setMovieRanked(savedMovies.ranked);
-        setMovieUnranked(savedMovies.unranked);
-      } else {
-        setMovieUnranked(hydrateInitialData(INITIAL_MOVIES, 'FILM'));
-      }
-
-      // Load Series
-      const savedSeries = await loadRankingData('SERIES');
-      if (savedSeries) {
-        setSeriesRanked(savedSeries.ranked);
-        setSeriesUnranked(savedSeries.unranked);
-      } else {
-        setSeriesUnranked(hydrateInitialData(INITIAL_SERIES, 'SERIES'));
-      }
-      
-      setLoading(false);
-    };
-
-    initData();
-  }, []);
+    if (user) {
+      loadData();
+    }
+  }, [loadData, user]); // Run when user changes or loadData changes (which includes selectedYear)
 
   // --- Persistence Helpers ---
 
   const persistData = (cat: Category, ranked: RankItem[], unranked: RankItem[]) => {
-    saveRankingData(cat, ranked, unranked);
+    if (user) {
+      saveRankingData(user.uid, selectedYear, cat, ranked, unranked);
+    }
+  };
+
+  const handleResetData = (cat: Category) => {
+    if (!user) return;
+    
+    // Clear state
+    if (cat === 'FILM') {
+        setMovieRanked([]);
+        setMovieUnranked([]);
+    } else {
+        setSeriesRanked([]);
+        setSeriesUnranked([]);
+    }
+    
+    // Clear comparison
+    if (category === cat) {
+        setComparison({
+            isComparing: false,
+            currentItem: null,
+            min: 0,
+            max: 0,
+            compareIndex: 0
+        });
+    }
+
+    // Persist empty lists
+    saveRankingData(user.uid, selectedYear, cat, [], []);
   };
 
   // --- Getters based on current category ---
@@ -123,18 +170,18 @@ function App() {
       compareIndex
     });
 
-  }, [category, movieUnranked, movieRanked, seriesUnranked, seriesRanked]);
+  }, [category, movieUnranked, movieRanked, seriesUnranked, seriesRanked, persistData]);
 
 
   // Effect to automatically start ranking if we are in RANK mode and nothing is active
   useEffect(() => {
-    if (view === 'RANK' && !comparison.isComparing && !loading) {
+    if (view === 'RANK' && !comparison.isComparing && !dataLoading && user) {
       // Only start if there are items to rank
       if (currentUnranked.length > 0) {
         startNextRanking();
       }
     }
-  }, [view, comparison.isComparing, loading, currentUnranked.length, startNextRanking]);
+  }, [view, comparison.isComparing, dataLoading, currentUnranked.length, startNextRanking, user]);
 
 
   const handleDecision = (isBetter: boolean) => {
@@ -198,6 +245,51 @@ function App() {
     }
   };
 
+  const handleRemoveFromRanking = (itemToRemove: RankItem) => {
+    // Case 1: Removing the NEW item being ranked
+    if (comparison.currentItem && comparison.currentItem.id === itemToRemove.id) {
+        if (category === 'FILM') {
+            const newUnranked = movieUnranked.filter(i => i.id !== itemToRemove.id);
+            setMovieUnranked(newUnranked);
+            persistData('FILM', movieRanked, newUnranked);
+        } else {
+            const newUnranked = seriesUnranked.filter(i => i.id !== itemToRemove.id);
+            setSeriesUnranked(newUnranked);
+            persistData('SERIES', seriesRanked, newUnranked);
+        }
+        
+        // Reset comparison to trigger next
+        setComparison({
+            isComparing: false,
+            currentItem: null,
+            min: 0,
+            max: 0,
+            compareIndex: 0
+        });
+        return;
+    }
+
+    // Case 2: Removing an existing ranked item (the comparison item)
+    if (category === 'FILM') {
+        const newRanked = movieRanked.filter(item => item.id !== itemToRemove.id);
+        setMovieRanked(newRanked);
+        persistData('FILM', newRanked, movieUnranked);
+    } else {
+        const newRanked = seriesRanked.filter(item => item.id !== itemToRemove.id);
+        setSeriesRanked(newRanked);
+        persistData('SERIES', newRanked, seriesUnranked);
+    }
+
+    // Reset comparison because indices are invalid now
+    setComparison({
+        isComparing: false,
+        currentItem: null,
+        min: 0,
+        max: 0,
+        compareIndex: 0
+    });
+  };
+
   // --- UI Helpers ---
 
   const handleReorder = (newItems: RankItem[]) => {
@@ -238,9 +330,6 @@ function App() {
       setSeriesUnranked(newUnranked);
       persistData('SERIES', seriesRanked, newUnranked);
     }
-    
-    // optionally alert user or just update count
-    // alert(`"${title}" added to unranked list!`);
   };
 
   const handleQuickAdd = (e: React.FormEvent) => {
@@ -252,10 +341,6 @@ function App() {
   };
 
   const handlePosterLoaded = useCallback((item: RankItem, url: string) => {
-      // Find and update item in respective list.
-      // We check where the item is. It could be in ranked or unranked.
-      // We assume item.category is correct.
-      
       const updateList = (list: RankItem[]) => {
           const idx = list.findIndex(i => i.id === item.id);
           if (idx === -1) return null;
@@ -267,14 +352,12 @@ function App() {
       };
 
       if (item.category === 'FILM') {
-          // Try ranked
           let newRanked = updateList(movieRanked);
           if (newRanked) {
              setMovieRanked(newRanked);
              persistData('FILM', newRanked, movieUnranked);
              return;
           }
-          // Try unranked
           let newUnranked = updateList(movieUnranked);
           if (newUnranked) {
               setMovieUnranked(newUnranked);
@@ -282,14 +365,12 @@ function App() {
               return;
           }
       } else {
-          // Try ranked
           let newRanked = updateList(seriesRanked);
           if (newRanked) {
              setSeriesRanked(newRanked);
              persistData('SERIES', newRanked, seriesUnranked);
              return;
           }
-          // Try unranked
           let newUnranked = updateList(seriesUnranked);
           if (newUnranked) {
               setSeriesUnranked(newUnranked);
@@ -297,12 +378,10 @@ function App() {
               return;
           }
       }
-
-  }, [movieRanked, movieUnranked, seriesRanked, seriesUnranked]);
+  }, [movieRanked, movieUnranked, seriesRanked, seriesUnranked, persistData]);
 
   const switchCategory = (newCat: Category) => {
     setCategory(newCat);
-    // Reset comparison when switching categories to avoid state mismatch
     setComparison({
       isComparing: false,
       currentItem: null,
@@ -311,6 +390,9 @@ function App() {
       compareIndex: 0
     });
   };
+
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading Auth...</div>;
+  if (!user) return <Login />;
 
   const themeClass = category === 'FILM' ? 'from-movie-600 to-movie-800' : 'from-tv-600 to-tv-800';
   const buttonActiveMovie = 'bg-movie-100 text-movie-700 border-movie-300';
@@ -327,11 +409,10 @@ function App() {
     ? Math.round((currentRanked.length / (currentRanked.length + currentUnranked.length)) * 100)
     : 100;
 
-  if (loading) {
+  if (dataLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-400">Loading your rankings...</div>;
   }
 
-  // Safe getter for comparison item
   const comparisonItem = currentRanked.length > 0 && comparison.compareIndex < currentRanked.length 
     ? currentRanked[comparison.compareIndex] 
     : null;
@@ -352,28 +433,49 @@ function App() {
             <h1 className="text-2xl font-bold tracking-tight">Cinematen Ranker</h1>
           </div>
 
-          {/* Stats */}
-          <div className="text-white/90 font-bold text-lg tracking-wider">
-            {currentRanked.length}/{currentUnranked.length}
-          </div>
+          <div className="flex items-center gap-4">
+            
+            {/* Year Selector */}
+            <div className="flex bg-black/20 p-1 rounded-lg backdrop-blur-sm">
+                <button
+                    onClick={() => setSelectedYear(2025)}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-all ${selectedYear === 2025 ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+                >
+                    2025
+                </button>
+                <button
+                    onClick={() => setSelectedYear(2026)}
+                    className={`px-3 py-1 rounded text-xs font-bold transition-all ${selectedYear === 2026 ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+                >
+                    2026
+                </button>
+            </div>
 
-          {/* Category Switcher */}
-          <div className="flex bg-black/20 p-1 rounded-lg backdrop-blur-sm">
-            <button
-              onClick={() => switchCategory('FILM')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                category === 'FILM' ? 'bg-white text-movie-700 shadow-sm' : 'text-white/70 hover:text-white'
-              }`}
+            {/* Category Switcher */}
+            <div className="flex bg-black/20 p-1 rounded-lg backdrop-blur-sm">
+                <button
+                onClick={() => switchCategory('FILM')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    category === 'FILM' ? 'bg-white text-movie-700 shadow-sm' : 'text-white/70 hover:text-white'
+                }`}
+                >
+                <Film size={16} /> <span className="hidden sm:inline">Movies</span>
+                </button>
+                <button
+                onClick={() => switchCategory('SERIES')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    category === 'SERIES' ? 'bg-white text-tv-700 shadow-sm' : 'text-white/70 hover:text-white'
+                }`}
+                >
+                <Tv size={16} /> <span className="hidden sm:inline">Series</span>
+                </button>
+            </div>
+
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="bg-black/20 p-2 rounded-lg hover:bg-black/30 text-white/80 hover:text-white transition-all"
             >
-              <Film size={18} /> Movies
-            </button>
-            <button
-              onClick={() => switchCategory('SERIES')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-                category === 'SERIES' ? 'bg-white text-tv-700 shadow-sm' : 'text-white/70 hover:text-white'
-              }`}
-            >
-              <Tv size={18} /> Series
+              <Settings size={20} />
             </button>
           </div>
         </div>
@@ -410,6 +512,15 @@ function App() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-grow p-4 md:p-6 container mx-auto max-w-5xl">
         
+        {/* Year Indicator */}
+        <div className="mb-4 text-center">
+             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                 selectedYear === 2026 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+             }`}>
+                <Calendar size={12} /> {selectedYear} List
+             </span>
+        </div>
+
         {view === 'RANK' && (
           <div className="animate-fade-in h-full">
              {currentUnranked.length === 0 ? (
@@ -417,10 +528,10 @@ function App() {
                  <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
                    <Award size={40} />
                  </div>
-                 <h2 className="text-3xl font-bold text-gray-800 mb-2">All Caught Up!</h2>
+                 <h2 className="text-3xl font-bold text-gray-800 mb-2">All Caught Up for {selectedYear}!</h2>
                  <p className="text-gray-500 max-w-md mx-auto mb-8">
                    You have ranked all {currentRanked.length} {category === 'FILM' ? 'movies' : 'series'}. 
-                   Check out your list or add more titles to your config.
+                   Check out your list or add more titles.
                  </p>
 
                  <div className="max-w-md mx-auto mb-10">
@@ -459,6 +570,7 @@ function App() {
                       comparisonItem={comparisonItem}
                       onDecision={handleDecision}
                       onPosterLoaded={handlePosterLoaded}
+                      onRemove={handleRemoveFromRanking}
                    />
                  )}
                  {!comparisonItem && currentRanked.length > 0 && (
@@ -494,7 +606,22 @@ function App() {
         Cinematen Ranker &copy; {new Date().getFullYear()}
       </footer>
 
+      {showSettings && (
+        <UserSettings 
+            onClose={() => setShowSettings(false)} 
+            selectedYear={selectedYear}
+            onReset={handleResetData}
+        />
+      )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

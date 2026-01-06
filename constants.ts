@@ -34,6 +34,32 @@ export const INITIAL_SERIES: string[] = [
   "Pluribus", "Death by Lightning", "Stranger Things", "Chad Powers"
 ];
 
+export const MAARTEN_2025_FILMS: string[] = [
+  "F1",
+  "The long walk",
+  "Superman",
+  "F4",
+  "Caught Stealing",
+  "Mission Impossible",
+  "Thunderbolts",
+  "Patsers",
+  "Downton Abbey",
+  "Death of a unicorn"
+];
+
+export const MAARTEN_2025_SERIES: string[] = [
+  "Severance",
+  "One Piece",
+  "The Real housewives of Antwerp",
+  "Andor",
+  "The Pitt",
+  "Pluribus",
+  "Solo Levelling",
+  "Stranger Things",
+  "The last of us",
+  "The studio"
+];
+
 // Helper to hydrate initial lists
 export const hydrateInitialData = (titles: string[], category: 'FILM' | 'SERIES'): RankItem[] => {
   return titles.map((title, index) => ({

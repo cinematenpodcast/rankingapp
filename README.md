@@ -70,3 +70,7 @@ The app will automatically create a collection named `rankings` when you rank yo
 The app attempts to fetch posters using:
 1.  **OMDB**: To get the IMDB ID from the Title.
 2.  **TMDB**: To get the high-quality poster path using the IMDB ID.
+
+## Add User
+
+Go to http://localhost:3000/?setup=true

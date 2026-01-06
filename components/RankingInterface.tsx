@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RankItem, ComparisonState } from '../types';
 import { PosterImage } from './PosterImage';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, EyeOff } from 'lucide-react';
 
 interface RankingInterfaceProps {
   category: 'FILM' | 'SERIES';
@@ -9,6 +9,7 @@ interface RankingInterfaceProps {
   comparisonItem: RankItem | null;
   onDecision: (better: boolean) => void;
   onPosterLoaded?: (item: RankItem, url: string) => void;
+  onRemove: (item: RankItem) => void;
 }
 
 export const RankingInterface: React.FC<RankingInterfaceProps> = ({ 
@@ -16,7 +17,8 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
   comparison, 
   comparisonItem, 
   onDecision,
-  onPosterLoaded
+  onPosterLoaded,
+  onRemove
 }) => {
   const [selection, setSelection] = useState<'better' | 'worse' | null>(null);
 
@@ -75,6 +77,17 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
           <div className="h-16 md:h-24 p-2 text-center bg-gray-50 flex items-center justify-center border-t border-gray-100 shrink-0">
             <h3 className="font-bold text-sm md:text-xl leading-tight line-clamp-2 w-full">{comparison.currentItem.title}</h3>
           </div>
+          
+          <button 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (comparison.currentItem) onRemove(comparison.currentItem);
+                }}
+                className="w-full py-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-colors border-t border-gray-100 uppercase tracking-wider"
+                title="Niet gezien? Verwijder uit lijst"
+            >
+                <EyeOff size={14} /> Niet Gezien
+          </button>
         </div>
 
         {/* VS Badge (Desktop Only) */}
@@ -119,6 +132,17 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
                 <h3 className="font-bold text-sm md:text-xl text-gray-700 leading-tight line-clamp-2">{comparisonItem.title}</h3>
              </div>
           </div>
+
+          <button 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(comparisonItem);
+                }}
+                className="w-full py-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-colors border-t border-gray-100 uppercase tracking-wider"
+                title="Niet gezien? Verwijder uit lijst"
+            >
+                <EyeOff size={14} /> Niet Gezien
+          </button>
         </div>
       </div>
 
