@@ -84,7 +84,7 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
                     if (comparison.currentItem) onRemove(comparison.currentItem);
                 }}
                 className="w-full py-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-colors border-t border-gray-100 uppercase tracking-wider"
-                title="Niet gezien? Verwijder uit lijst"
+                title="Nog niet (uit)gezien? Verwijder uit lijst"
             >
                 <EyeOff size={14} /> Niet Gezien
           </button>
@@ -139,7 +139,7 @@ export const RankingInterface: React.FC<RankingInterfaceProps> = ({
                     onRemove(comparisonItem);
                 }}
                 className="w-full py-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 text-[10px] md:text-xs font-medium flex items-center justify-center gap-1 transition-colors border-t border-gray-100 uppercase tracking-wider"
-                title="Niet gezien? Verwijder uit lijst"
+                title="Nog niet (uit)gezien? Verwijder uit lijst"
             >
                 <EyeOff size={14} /> Niet Gezien
           </button>
