@@ -80,9 +80,19 @@ function AppContent() {
 
   // --- Persistence Helpers ---
 
-  const persistData = (cat: Category, ranked: RankItem[], unranked: RankItem[]) => {
-    if (user) {
-      saveRankingData(user.uid, selectedYear, cat, ranked, unranked);
+  const persistData = async (cat: Category, ranked: RankItem[], unranked: RankItem[]) => {
+    if (!user) {
+      console.warn("Cannot persist data: no user logged in");
+      return;
+    }
+    
+    try {
+      console.log(`Persisting ${cat} data: ${ranked.length} ranked, ${unranked.length} unranked`);
+      await saveRankingData(user.uid, selectedYear, cat, ranked, unranked);
+      console.log(`✓ Successfully persisted ${cat} data`);
+    } catch (error) {
+      console.error(`✗ Failed to persist ${cat} data:`, error);
+      // Optionally show user notification here
     }
   };
 
@@ -315,6 +325,8 @@ function AppContent() {
   };
 
   const handleAdd = (title: string) => {
+    console.log(`[handleAdd] Adding ${category}: "${title}"`);
+    
     const newItem: RankItem = {
       id: `${category}-${Date.now()}`,
       title: title,
@@ -323,10 +335,12 @@ function AppContent() {
 
     if (category === 'FILM') {
       const newUnranked = [...movieUnranked, newItem];
+      console.log(`[handleAdd] New FILM unranked list length: ${newUnranked.length}`);
       setMovieUnranked(newUnranked);
       persistData('FILM', movieRanked, newUnranked);
     } else {
       const newUnranked = [...seriesUnranked, newItem];
+      console.log(`[handleAdd] New SERIES unranked list length: ${newUnranked.length}`);
       setSeriesUnranked(newUnranked);
       persistData('SERIES', seriesRanked, newUnranked);
     }

@@ -22,8 +22,9 @@ try {
   const app = (firebaseApp as any).initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
+  console.log("✓ Firebase initialized successfully");
 } catch (e) {
-  console.error("Firebase initialization failed:", e);
+  console.error("✗ Firebase initialization failed:", e);
 }
 
 export { auth, db };
@@ -38,7 +39,13 @@ export const saveRankingData = async (
   ranked: RankItem[],
   unranked: RankItem[]
 ) => {
-  if (!db) return;
+  if (!db) {
+    console.error("Firestore database not initialized - cannot save data");
+    throw new Error("Database not initialized");
+  }
+  
+  console.log(`[saveRankingData] Starting save for ${category}, user: ${userId}, year: ${year}`);
+  console.log(`[saveRankingData] Ranked: ${ranked.length} items, Unranked: ${unranked.length} items`);
   
   try {
     // Save ranked array in the main document
@@ -50,32 +57,52 @@ export const saveRankingData = async (
 
     // Save unranked items as individual documents in subcollection
     const unrankedPath = `${path}/${category}/unranked`;
-    const unrankedCollection = collection(db, unrankedPath);
     
-    // Get existing unranked items
-    const existingSnapshot = await getDocs(collection(db, unrankedPath));
-    const existingIds = new Set(existingSnapshot.docs.map(d => d.id));
-    
-    // Delete items that are no longer in the unranked list
-    for (const existingDoc of existingSnapshot.docs) {
-      const exists = unranked.some(item => item.id === existingDoc.id);
-      if (!exists) {
-        await deleteDoc(doc(db, unrankedPath, existingDoc.id));
+    try {
+      // Get existing unranked items
+      const existingSnapshot = await getDocs(collection(db, unrankedPath));
+      
+      // Delete items that are no longer in the unranked list
+      for (const existingDoc of existingSnapshot.docs) {
+        const exists = unranked.some(item => item.id === existingDoc.id);
+        if (!exists) {
+          await deleteDoc(doc(db, unrankedPath, existingDoc.id));
+        }
       }
-    }
-    
-    // Add/update items in the unranked subcollection
-    for (const item of unranked) {
-      await setDoc(doc(db, unrankedPath, item.id), {
-        id: item.id,
-        title: item.title,
-        category: item.category,
-        posterUrl: item.posterUrl || null,
-        imdbId: item.imdbId || null
-      }, { merge: true });
+      
+      // Add/update items in the unranked subcollection
+      for (const item of unranked) {
+        if (!item.id || !item.title) {
+          console.warn(`Skipping invalid item:`, item);
+          continue;
+        }
+        
+        // Build document data - only include fields that have values (Firestore doesn't accept null)
+        const docData: any = {
+          id: item.id,
+          title: item.title,
+          category: item.category
+        };
+        
+        // Only add optional fields if they exist
+        if (item.posterUrl) {
+          docData.posterUrl = item.posterUrl;
+        }
+        if (item.imdbId) {
+          docData.imdbId = item.imdbId;
+        }
+        
+        await setDoc(doc(db, unrankedPath, item.id), docData, { merge: true });
+      }
+      
+      console.log(`✓ Saved ${unranked.length} unranked items for ${category} (year ${year}, user ${userId})`);
+    } catch (unrankedError) {
+      console.error(`Error saving unranked items for ${category} (path: ${unrankedPath}):`, unrankedError);
+      throw unrankedError; // Re-throw to be caught by outer catch
     }
   } catch (e) {
-    console.error("Error saving to Firestore", e);
+    console.error(`Error saving ranking data for ${category} (year ${year}, user ${userId}):`, e);
+    throw e; // Re-throw so calling code knows it failed
   }
 };
 
