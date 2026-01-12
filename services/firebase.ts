@@ -30,6 +30,27 @@ try {
 export { auth, db };
 
 /**
+ * Helper function to clean RankItem objects for Firestore (remove undefined values)
+ */
+const cleanRankItem = (item: RankItem): any => {
+  const cleaned: any = {
+    id: item.id,
+    title: item.title,
+    category: item.category
+  };
+  
+  // Only add optional fields if they have actual values (not undefined)
+  if (item.posterUrl !== undefined && item.posterUrl !== null) {
+    cleaned.posterUrl = item.posterUrl;
+  }
+  if (item.imdbId !== undefined && item.imdbId !== null) {
+    cleaned.imdbId = item.imdbId;
+  }
+  
+  return cleaned;
+};
+
+/**
  * Save ranking data (ranked stays in document, unranked is now a subcollection)
  */
 export const saveRankingData = async (
@@ -49,9 +70,12 @@ export const saveRankingData = async (
   
   try {
     // Save ranked array in the main document
+    // Clean all items to remove undefined values (Firestore doesn't accept undefined)
+    const cleanedRanked = ranked.map(item => cleanRankItem(item));
+    
     const path = `users/${userId}/years/${year}/rankings`;
     await setDoc(doc(db, path, category), {
-      ranked,
+      ranked: cleanedRanked,
       lastUpdated: new Date()
     }, { merge: true });
 
@@ -77,20 +101,8 @@ export const saveRankingData = async (
           continue;
         }
         
-        // Build document data - only include fields that have values (Firestore doesn't accept null)
-        const docData: any = {
-          id: item.id,
-          title: item.title,
-          category: item.category
-        };
-        
-        // Only add optional fields if they exist
-        if (item.posterUrl) {
-          docData.posterUrl = item.posterUrl;
-        }
-        if (item.imdbId) {
-          docData.imdbId = item.imdbId;
-        }
+        // Clean the item to remove undefined values
+        const docData = cleanRankItem(item);
         
         await setDoc(doc(db, unrankedPath, item.id), docData, { merge: true });
       }
